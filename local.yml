@@ -1,0 +1,36 @@
+version: '3'
+
+volumes:
+  elasticsearch_api_local_postgres_data: {}
+  elasticsearch_api_local_postgres_data_backups: {}
+
+services:
+  django:
+    build:
+      context: .
+      dockerfile: ./compose/local/django/Dockerfile
+    image: elasticsearch_api_local_django
+    container_name: elasticsearch_api_local_django
+    # platform: linux/x86_64
+    depends_on:
+      - postgres
+    volumes:
+      - .:/app:z
+    env_file:
+      - ./.envs/.local/.django
+      - ./.envs/.local/.postgres
+    ports:
+      - "8031:8000"
+    command: /start
+
+  postgres:
+    build:
+      context: .
+      dockerfile: ./compose/production/postgres/Dockerfile
+    image: elasticsearch_api_production_postgres
+    container_name: elasticsearch_api_local_postgres
+    volumes:
+      - elasticsearch_api_local_postgres_data:/var/lib/postgresql/data:Z
+      - elasticsearch_api_local_postgres_data_backups:/backups:z
+    env_file:
+      - ./.envs/.local/.postgres

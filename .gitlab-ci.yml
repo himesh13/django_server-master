@@ -1,0 +1,63 @@
+stages:
+  - lint
+  - test
+
+variables:
+  POSTGRES_USER: 'django_server'
+  POSTGRES_PASSWORD: ''
+  POSTGRES_DB: 'test_django_server'
+  POSTGRES_HOST_AUTH_METHOD: trust
+  
+
+flake8:
+  stage: lint
+  image: python:3.9-alpine
+  before_script:
+    - pip install -q flake8
+  script:
+    - flake8
+
+
+
+pytest:
+
+  stage: test
+  image: registry.kaisens.fr/docker-compose:latest
+  artifacts:
+    expire_in: 30 mins
+    paths:
+      - coverage.xml
+  tags:
+    - docker
+  services:
+    - docker:19.03.12-dind
+  before_script:
+
+    - docker info
+    - docker version
+
+    - docker-compose -f local.yml build
+    # Ensure celerybeat does not crash due to non-existent tables
+    - docker-compose -f local.yml run --rm django python manage.py migrate
+    - docker-compose -f local.yml up -d
+  script:
+    #- docker-compose -f local.yml run django pytest
+    # add code coverage
+    - docker-compose -f local.yml run django coverage run manage.py test
+    - docker-compose -f local.yml run django coverage report -m
+    - docker-compose -f local.yml run django coverage xml
+
+
+SonarScanner:
+  image:
+    name: sonarsource/sonar-scanner-cli:4.6
+    entrypoint: [""]
+  stage: report
+  script:
+    - sonar-scanner
+      -Dsonar.projectKey=code_quality_test
+      -Dsonar.host.url=http://178.33.234.139:9000
+      -Dsonar.login=admin
+      -Dsonar.password=nchamroukhi.2022
+      -Dsonar.scm.disabled=True
+      -Dsonar.python.coverage.reportPaths=coverage.xml
