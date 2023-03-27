@@ -5,13 +5,16 @@ from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 import csv
-import json, os
+import pandas as pd
+import uuid
+import json, os, shutil
 import requests
 import base64
 import logging
 from django_server.server.api.serializers import (
     TextInputSerializer,
     UploadFileSerializer,
+    CollectFeedbackSerializer,
 )
 from keras.models import load_model
 import transformers
@@ -22,7 +25,7 @@ import mysql.connector
 
 class CollectFeedbackViewSet(ViewSet):
    
-    @swagger_auto_schema(query_serializer=TextInputSerializer)
+    @swagger_auto_schema(query_serializer=CollectFeedbackSerializer)
     def create(self, request):
         try:
             count = 894
@@ -30,10 +33,45 @@ class CollectFeedbackViewSet(ViewSet):
             smell = request.GET.get("smell")
             isSmell = request.GET.get("isSmell")
             print('response : '+text+' , '+smell+' , '+isSmell)
+
+            # to save any file on your current data path you shoud use this relative path:
+            # ./app/data/
+            # Writing  text field to file
+            os.makedirs("./data/code/", exist_ok=True)
+
+            file_name = str(uuid.uuid4())
+
+            with open(f"./data/code/{file_name}.txt", "w") as file:
+                # Writing data to a file
+                file.write(text)
+            print("passes to stage 2")
+            # prepare csv file 
+            df = pd.DataFrame({"file_name": file_name, "smell":str(smell), "isSmell":str(isSmell) }, index=[0])
+            df.to_csv(f"./data/code/{file_name}.csv", index=None)
+
+            # increament vairable
+            # we should use a DB to store last value or simple way is to use file
+            with open("./data/var") as f:
+                var = [line.rstrip() for line in f]
+                print(var)
+            
+            if var:
+                incr = int(var[0]) +1
+            else:
+                incr = 1
+            print(incr)
+
+            with open(f"./data/var", "w") as file:
+                # Writing data to a file
+                file.write(str(incr))
+
             return HttpResponse(
                 status=status.HTTP_200_OK,
             )
 
+
+
+            
         except Exception as e:
             print(e)
             return Response(

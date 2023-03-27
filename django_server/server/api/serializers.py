@@ -12,3 +12,10 @@ class TextInputSerializer(serializers.Serializer):
 
 class UploadFileSerializer(serializers.Serializer):
     file = serializers.FileField(required=True)
+
+
+
+class CollectFeedbackSerializer(serializers.Serializer):
+    file = serializers.CharField(max_length=800, required=True)
+    smell = serializers.CharField(max_length=800, required=True)
+    isSmell = serializers.CharField(max_length=800, required=True)
