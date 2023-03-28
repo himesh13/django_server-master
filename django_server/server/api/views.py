@@ -45,9 +45,18 @@ class CollectFeedbackViewSet(ViewSet):
                 # Writing data to a file
                 file.write(text)
             print("passes to stage 2")
-            # prepare csv file 
-            df = pd.DataFrame({"file_name": file_name, "smell":str(smell), "isSmell":str(isSmell) }, index=[0])
-            df.to_csv(f"./data/code/{file_name}.csv", index=None)
+            # prepare csv file
+            try:
+                df = pd.read_csv('./data/code/feedback.csv')
+                new_df = pd.DataFrame({"file_name": file_name, "smell":str(smell), "isSmell":str(isSmell) }, index=[0])
+                merged_df = df.append(new_df)
+                merged_df.to_csv("./data/code/feedback.csv", index=None)
+            except:
+                print("file does not exist --- create it ....")
+                df = pd.DataFrame({"file_name": file_name, "smell":str(smell), "isSmell":str(isSmell) }, index=[0])
+                df.to_csv("./data/code/feedback.csv", index=None)
+
+            
 
             # increament vairable
             # we should use a DB to store last value or simple way is to use file
