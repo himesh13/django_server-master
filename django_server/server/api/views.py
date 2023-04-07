@@ -11,6 +11,8 @@ import json, os, shutil
 import requests
 import base64
 import logging
+from django_server.server.api.MetricModel import MethodMetric, ClassMetric
+from django_server.server.Utils import split
 from django_server.server.api.serializers import (
     TextInputSerializer,
     UploadFileSerializer,
@@ -22,9 +24,11 @@ import os
 from django.core.files import File
 import numpy
 import mysql.connector
+from django_server.server.api.Metrics import Metrics
 
+metrics = Metrics([],[])
 class CollectFeedbackViewSet(ViewSet):
-   
+    global metrics
     @swagger_auto_schema(query_serializer=CollectFeedbackSerializer)
     def create(self, request):
         try:
@@ -37,11 +41,28 @@ class CollectFeedbackViewSet(ViewSet):
             # to save any file on your current data path you shoud use this relative path:
             # ./app/data/
             # Writing  text field to file
-            os.makedirs("./data/code/", exist_ok=True)
+            if(smell == 'ComplexMethod'):
+                if(isSmell == 'true'):
+                    dataPath = './data/code/ComplexMethod/True'
+                    #os.makedirs("./data/code/ComplexMethod/True", exist_ok=True)
+                else:
+                    dataPath = './data/code/ComplexMethod/False'
+                    #os.makedirs("./data/code/ComplexMethod/False", exist_ok=True)
+            elif(smell == 'LongMethod'):
+                if(isSmell == 'true'):
+                    dataPath = './data/code/LongMethod/True'
+                else:
+                    dataPath = './data/code/LongMethod/False'
+            else:
+                if(isSmell == 'true'):
+                    dataPath = './data/code/MultiFaceted/True'
+                else:
+                    dataPath = './data/code/MultiFaceted/False'
 
+            os.makedirs(dataPath, exist_ok=True)        
             file_name = str(uuid.uuid4())
 
-            with open(f"./data/code/{file_name}.txt", "w") as file:
+            with open(dataPath+'/'+file_name+".txt", "w") as file:
                 # Writing data to a file
                 file.write(text)
             print("passes to stage 2")
@@ -69,7 +90,8 @@ class CollectFeedbackViewSet(ViewSet):
             else:
                 incr = 1
             print(incr)
-
+           
+            metrics.handleFeedbackCount()
             with open(f"./data/var", "w") as file:
                 # Writing data to a file
                 file.write(str(incr))
@@ -93,6 +115,7 @@ class CollectFeedbackViewSet(ViewSet):
 
 
 class TextInputViewSet(ViewSet):
+    global metrics
     """
     Load Text and Apply ML model API
     """
@@ -103,35 +126,59 @@ class TextInputViewSet(ViewSet):
     def create(self, request):
         try:
             count = 894
+            smell = ""
             text = request.GET.get("file")
             isClass = request.GET.get("isClass")
             qaulifiedName = request.GET.get("qaulifiedName")
             className = request.GET.get("className")
-            print('qualifiedname')
-            print(text)
-            text = text.replace('\n', ' ').replace('\r', '')
-            tokenized_text = self.tokenizer.tokenize(text)
-            input_ids = self.tokenizer.convert_tokens_to_ids(tokenized_text)
-            print('idssss')
-           
-            X_train = numpy.array(input_ids,dtype=float)
-            h = X_train.shape[0]
-            w = count - h
-            X_train = numpy.pad(X_train,(0,w), 'maximum')
-            print(X_train.shape)
-            X_train = X_train.reshape(1,count)
-            print('Xtrain')
-            print(X_train)
-            y = self.autoencoder.predict(X_train)
-            y = y.reshape(y.shape[0], y.shape[1])   
-            mse = numpy.mean(numpy.power(X_train - y, 2), axis=1)                            
-            print(mse)
-            y_pred = [1 if e > 400000 else 0 for e in mse]
+            methodName = request.GET.get("typeName")
+            if(isClass == "False"):
+                result,val = metrics.doesExistMethod(split(qaulifiedName,'.',-1)[0],split(qaulifiedName,'.',-1)[1],className)
+                
+            else:
+                result,val = metrics.doesExistClass(qaulifiedName,className)
+            print('Result is '+str(result))
+            if result == False:
+              return HttpResponse(
+                json.dumps({"is_file_uploaded":True, "isSmell": False, "smell":smell}),
+                status=status.HTTP_200_OK,
+            )
+            else:
+                res = val[0]
+                if(isClass == "False"):
+                    print(res.cc)
+                    print(res.pc)
+                    if((float(res.cc) >= 4 and float(res.cc) <= 6)):
+                        y_pred = self.callAlgo(count,text,"ComplexMethod")
+                        smell = "ComplexMethod"
+                    if(float(res.cc) >= 8):
+                        y_pred = True
+                    else :
+                        y_pred = False
+                    if(int(res.pc) >= 3 and int(res.pc) <= 5):
+                        y_pred = self.callAlgo(count,text,"LongMethod")
+                        smell = "LongMethod"
+                        if(float(res.pc) >= 6):
+                            y_pred = True
+                    else :
+                        smell = "No Smell"
+                        y_pred = False
+                else:
+                    if(float(res.lcom) >= 0.4 and float(res.lcom) <= 0.6):
+                        y_pred = self.callAlgo(count,text,"MultiFaceted")
+                        smell = "MultiFaceted"
+                        if(float(res.lcom) >= 0.6):
+                            y_pred = True
+                    else :
+                        smell = "No Smell"
+                        y_pred = False
+
+            #y_pred = self.new_method(count, text, qaulifiedName, className, val)
             print('result')
             print(y_pred)
 
             return HttpResponse(
-                json.dumps({"is_file_uploaded":True, "isSmell": y_pred}),
+                json.dumps({"is_file_uploaded":True, "isSmell": y_pred,"smell":smell}),
                 status=status.HTTP_200_OK,
             )
 
@@ -143,8 +190,48 @@ class TextInputViewSet(ViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+    def callAlgo(self, count, text, smell):
+
+        text = text.replace('\n', ' ').replace('\r', '')
+        tokenized_text = self.tokenizer.tokenize(text)
+        input_ids = self.tokenizer.convert_tokens_to_ids(tokenized_text)
+            #print('idssss')
+           
+        X_train = numpy.array(input_ids,dtype=float)
+        print('1')
+        h = X_train.shape[0]
+        print('2')
+        w = count - h
+        print('count'+ str(count))
+        print('shape'+str(h))
+        if w < 0:
+            w = h % count
+            X_train = X_train[:count]    
+        else:
+            X_train = numpy.pad(X_train,(0,w), 'maximum')
+        print('new shape'+str(X_train.shape[0]))
+        print('3')
+        X_train = X_train.reshape(1,count)
+        print('4')
+        print('Xtrain')
+        print(smell)
+           # print(X_train)
+        if(smell == "ComplexMethod"):
+            y = self.autoencoder.predict(X_train)
+        elif (smell == "LongMethod"):
+            y = self.autoencoder.predict(X_train)
+        else:
+            y = self.autoencoder.predict(X_train)
+
+        y = y.reshape(y.shape[0], y.shape[1])   
+        mse = numpy.mean(numpy.power(X_train - y, 2), axis=1)                            
+            #print(mse)
+        y_pred = [1 if e > 400000 else 0 for e in mse]
+        return y_pred
+
+
 class LoadDataFilesViewSet(ViewSet):
-    
+    global metrics
     serializer_class = UploadFileSerializer
 
     @swagger_auto_schema()
@@ -162,23 +249,43 @@ class LoadDataFilesViewSet(ViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         line_count_meth = 0
+        listMethods = []
+        listClass = []
         for row in method_file_uploaded:
             if line_count_meth == 0:
-                print(row)
-            line_count_meth += 1
+                line_count_meth += 1
+                #print(row)
+                continue
+            tokens = str(row).split(",")
+            mToken = MethodMetric(tokens[0],tokens[1],tokens[2], tokens[3], tokens[4], tokens[5], tokens[6])
+            listMethods.append(mToken)
+        metrics.setMethodMetrics(listMethods)
+        file = open('items.txt','w')
+        for entry in listMethods:
+           file.write(str(entry.package)+','+str(entry.type)+','+str(entry.method)+','+str(entry.loc)+"\n")
+        #print('length'+str(len(listClass))+" and "+str(len(listMethods)))
+        file.write('methods done')
         line_count_class = 0
         for row in class_file_uploaded:
             if line_count_class == 0:
-                print(row)
-            line_count_class += 1    
-        
-        print('length'+str(line_count_meth)+" and "+str(line_count_class))
+                line_count_class += 1
+                #print(row)
+                continue
+            tokens = str(row).split(",")
+            cToken = ClassMetric(tokens[0],tokens[1],tokens[2], tokens[11])
+            listClass.append(cToken)  
+        metrics.setClassMetrics(listClass)
+        file = open('items.txt','w')
+        for entry in listClass:
+           file.write(str(entry.package)+','+str(entry.type)+','+str(entry.LCOM)+"\n")
+        print('length'+str(len(listClass))+" and "+str(len(listMethods)))
 
         return HttpResponse(
                 status=status.HTTP_200_OK,
             )
         
 class LoadFileViewSet(ViewSet):
+    global metrics
     """
     Load File and Apply Prediction API
     """

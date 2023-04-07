@@ -1,0 +1,133 @@
+@GetMapping({ "/", "/welcome" })
+	public String welcome(HttpServletRequest request, Model model) throws IOException {
+		System.out.println("In Home Controller Get Mapping");
+		User loggedIn = securityService.getDetails();
+		if (!securityService.isAuthenticated()) {
+			System.out.println("Is not authenticated");
+			return "login-new";
+		} else if (loggedIn.isAdmin) {
+			System.out.println("Is admin");
+			model.addAttribute("user", loggedIn);
+			return "index";
+		}
+
+//		else if (loggedIn.isInstructor) {
+//			model.addAttribute("user", loggedIn);
+//			List<User> users = userService.findAllUsers();
+//			// getUserDetails(model, userLists);
+//			model.addAttribute("userList", users);
+//			// users.forEach(user -> System.out.println(user.getUsername()));
+//			model.addAttribute("instructForm", new InstructorsHomePageModel());
+//
+//			if ((request.getSession().getAttribute("introduceSample") != null)
+//					&& (boolean) request.getSession().getAttribute("introduceSample")) {
+//				System.out.println("session sample not null");
+//				// request.getSession().removeAttribute("introduceSample");
+//				if ((boolean) request.getSession().getAttribute("maxAnnotations")) {
+//					model.addAttribute("maxAnnotations", "1");
+//					return "indexInstructor";
+//				}
+//				String userId = ((Long) request.getSession().getAttribute("userIdForSafety")).toString();
+//				System.out.println("UserId :" + userId);
+//				List<User> userLists = new ArrayList<>();
+//				userLists.add(userService.findOne(userId));
+//				String userBanner = (String) request.getSession().getAttribute("userBanner");
+//				if (userBanner != null) {
+//					users = userService.findFittingBannerId(userBanner.substring(0, userBanner.length() - 1));
+//					// System.out.println(userForm.getBannerId().substring(0,
+//					// userForm.getBannerId().length() - 2));
+//					model.addAttribute("userListIns", users);
+//				}
+//				getUserDetails(model, users);
+//			}
+//
+//			return "indexInstructor";
+//		}
+
+		AnnotationReturnModel modelReturn = annotationService.getAnnotationForUser(loggedIn.getUsername().toString(),
+				"1", false, null);
+		// String content = Files.toString(new File("file.txt"), Charsets.UTF_8);
+		Sample randomSample = modelReturn.getSample();
+		System.out.println("random Sample from database :" + randomSample);
+		if (randomSample.getIsClass()) {
+			System.out.println("Sample is class");
+			String packageName = randomSample.getPathToFile().substring(
+					TagmanUtil.ordinalIndexOf(randomSample.getPathToFile(), File.separator, 4) + 1,
+					TagmanUtil.ordinalIndexOf(randomSample.getPathToFile(), File.separator, 5));
+			String className = randomSample.getPathToFile().substring(
+					TagmanUtil.ordinalIndexOf(randomSample.getPathToFile(), File.separator, 5) + 1,
+					randomSample.getPathToFile().length() - 5);
+
+			List<DesigniteCSV> desginEntry = designiteService.getdesigniteEntries(packageName, className,
+					randomSample.getProjectName());
+			if (desginEntry.size() > 0) {
+				System.out.println("Query returned more than zero results");
+				System.out.println("Entry put into model: " + desginEntry.get(0).toString());
+				model.addAttribute("designEntry", desginEntry.get(0));
+			}
+		} else {
+			System.out.println("Sample is method");
+			
+			String packageName = randomSample.getPathToFile().substring(
+					TagmanUtil.ordinalIndexOf(randomSample.getPathToFile(), File.separator, 4) + 1,
+					TagmanUtil.ordinalIndexOf(randomSample.getPathToFile(), File.separator, 5));
+			String className = randomSample.getPathToFile().substring(
+					TagmanUtil.ordinalIndexOf(randomSample.getPathToFile(), File.separator, 5) + 1,
+					TagmanUtil.ordinalIndexOf(randomSample.getPathToFile(), File.separator, 6));
+			String methodName = randomSample.getPathToFile().substring(
+					TagmanUtil.ordinalIndexOf(randomSample.getPathToFile(), File.separator, 6) + 1,
+					randomSample.getPathToFile().length() - 5);
+
+			List<DesigniteCSVMethod> desginEntry = designiteService.getdesigniteMethodEntries(packageName, className,
+					randomSample.getProjectName(), methodName);
+
+			if (desginEntry.size() > 0) {
+				System.out.println("Query returned more than zero results");
+				System.out.println("Entry put into model: " + desginEntry.get(0).toString());
+		
+				// System.out.println("entry" + desginEntry.get(0).toString());
+				model.addAttribute("designEntryMethod", desginEntry.get(0));
+			}
+		}
+		if (randomSample != null) {
+			List<String> files = TagmanUtil.readFile(randomSample.getPathToFile());
+			StringBuilder sb = new StringBuilder();
+			files.forEach(file -> {
+				sb.append(file).append("\n");
+			});
+			model.addAttribute("isClass", randomSample.getIsClass());
+			model.addAttribute("sample", sb.toString());
+			model.addAttribute("id", randomSample.getId());
+			model.addAttribute("filename",
+					randomSample.getPathToFile().substring(randomSample.getPathToFile().lastIndexOf("/") + 1));
+			// System.out.println(TagmanUtil.readFile(randomSample.getPathToFile()).toString());
+			model.addAttribute("user", loggedIn);
+			model.addAttribute("isEmpty", "0");
+			System.out.println("Samples in list:" + randomSample.getSmells());
+			List<String> smells = List.of(randomSample.getSmells().split(","));
+			List<String> smellsConv = new ArrayList<>();
+
+			smells.stream().forEach(smell -> {
+				if (smell.equals("1"))
+					smellsConv.add("Complex Method");
+				else if (smell.equals("2"))
+					smellsConv.add("Long Method");
+				else if (smell.equals("3"))
+					smellsConv.add("MultiFaceted Abstraction");
+
+			});
+			smellsConv.forEach(System.out::println);
+
+			model.addAttribute("smellsSent", smellsConv);
+//		
+//		importService.processDesignFile(new File(
+//				"/Users/himesh/Library/CloudStorage/OneDrive-DalhousieUniversity/Thesis/Mootex/run2/eval/designite_out_java/adikul30_MaterialNews/TypeMetrics.csv"),
+//				false);
+		} else {
+			System.out.println("Sample returned nulll");
+			model.addAttribute("isEmpty", "1");
+
+		}
+		model.addAttribute("totalUserCount", modelReturn.getSize());
+		return "instructions";
+	}

@@ -7,7 +7,7 @@ class TextInputSerializer(serializers.Serializer):
     isClass = serializers.CharField(max_length=800, required=True)
     qaulifiedName = serializers.CharField(max_length=800, required=True)
     className = serializers.CharField(max_length=800, required=True)
-    
+    typeName = serializers.CharField(max_length=800, required=True)
     
 
 class UploadFileSerializer(serializers.Serializer):

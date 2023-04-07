@@ -1,0 +1,50 @@
+/**
+	 * @param model
+	 * @param users
+	 * @throws IOException
+	 */
+	private void getUserDetails(Model model, List<User> users) throws IOException {
+		System.out.println("In getUserDetails");
+		if (users.get(0).getSamplesAnswered() >= 25) {
+			model.addAttribute("maxAnnotations", "1");
+
+			return;
+		} else {
+			model.addAttribute("maxAnnotations", "0");
+		}
+
+		InstructorMarking annotatedUser = annotationService.getUnmarkedAnnotation(users.get(0).getId());
+		if (annotatedUser == null) {
+			System.out.println("Annotated user returned null");
+			model.addAttribute("userAnnotationsZero", "1");
+			return;
+		}
+		Annotation annotation = annotationService.getAnnotationById(annotatedUser.getAnnotationId());
+		Sample sample = annotationService.getSampleById(annotation.getSampleId());
+		//model.addAttribute("bannerId", users.get(0).getBannerId());
+		// System.out.println("Added BannerId +"+users.get(0).getBannerId());
+		List<String> files = TagmanUtil.readFile(sample.getPathToFile());
+		StringBuilder sb = new StringBuilder();
+		files.forEach(file -> {
+			sb.append(file).append("\n");
+		});
+		model.addAttribute("annotationId", annotation.getId());
+		model.addAttribute("sample", sb.toString());
+
+		List<String> smells = new ArrayList<>();
+		if (!annotation.isCM()) {
+			smells.add("Complex Method");
+		}
+
+		if (!annotation.isECB()) {
+			smells.add("Empty Catch Block");
+		}
+		if (!annotation.isLP()) {
+			smells.add("Long Parameter");
+		}
+		if (!annotation.isMA()) {
+			smells.add("Mutlifaceted Abstraction");
+		}
+		if (smells.size() > 0)
+			model.addAttribute("smells", smells);
+	}

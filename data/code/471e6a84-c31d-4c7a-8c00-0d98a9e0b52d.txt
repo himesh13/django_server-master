@@ -1,0 +1,12 @@
+@GetMapping("/getAllSamples")
+    public String registration(Model model,RedirectAttributes attributes) {
+        if (!securityService.isAuthenticated()) {
+            return "redirect:/login";
+        }
+
+     List<Sample> allSamples = importService.getAllSamples();
+     System.out.println("Samples"+allSamples.size());
+     model.addAttribute("samples",allSamples);
+     
+     return "showsamples";
+    }

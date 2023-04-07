@@ -1,0 +1,19 @@
+public List<DesigniteCSV> getdesigniteEntries(String packageName, String className, String projectName) {
+		System.out.println("Getting class designite service entries. ");
+		System.out.println("packageName" + packageName + " classname:" + className + " projectname: " + projectName);
+		// String userId = userRepository.findByUsername(username).getId().toString();
+		hibernateUtil.init();
+		SessionFactory sessionFactory = TagmanUtil.getSessionFactory();
+		Session session = sessionFactory.getCurrentSession();
+		Transaction tx = session.beginTransaction();
+		SQLQuery query = session.createSQLQuery("select * from designitecsvdata where package_name = \"" + packageName
+				+ "\" AND type_name = \"" + className + "\" AND project_name = \"" + projectName + "\"");
+		System.out.println("Running query : " + query.toString());
+		System.out.println("Running query : " + "select * from designitecsvdata where package_name = \"" + packageName
+				+ "\" AND type_name = \"" + className + "\" AND project_name = \"" + projectName + "\"");
+
+		query.addEntity(DesigniteCSV.class);
+		List results = query.list();
+		System.out.println("Query returned size :" + results.size());
+		return results;
+	}
