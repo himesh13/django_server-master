@@ -27,13 +27,13 @@ class Metrics:
             return False, []
         
     def handleFeedbackCount(self):
-        if self.feedbackCount == -1:
+        
             with open("./data/var") as f:
                 var = [line.rstrip() for line in f]
                 print(var)
             
             if var:
-                if int(var[0]) > 1:
+                if int(var[0]) > 50:
                     self.retrainModel()
             
     # def thread_function(name):

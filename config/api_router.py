@@ -3,9 +3,11 @@ from rest_framework.routers import DefaultRouter, SimpleRouter
 
 from django_server.server.api.views import (
     LoadDataFilesViewSet,
+    LoadRetrainModel,
     TextInputViewSet,
     LoadFileViewSet,
-    CollectFeedbackViewSet
+    CollectFeedbackViewSet,
+    LoadRetrainModel
 )
 
 app_name = "api/"
@@ -32,4 +34,10 @@ router.register(
     "/upload-file",
     LoadFileViewSet,
     "/upload-file",
+)
+
+router.register(
+    "/retrain",
+LoadRetrainModel,
+    "/retrain",
 )

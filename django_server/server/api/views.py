@@ -1,3 +1,4 @@
+import threading
 from django.http import HttpResponse
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.viewsets import ViewSet
@@ -25,7 +26,7 @@ from django.core.files import File
 import numpy
 import mysql.connector
 from django_server.server.api.Metrics import Metrics
-
+from django_server.server.api.EncoderModel import train_model
 metrics = Metrics([],[])
 class CollectFeedbackViewSet(ViewSet):
     global metrics
@@ -36,6 +37,7 @@ class CollectFeedbackViewSet(ViewSet):
             text = request.GET.get("file")
             smell = request.GET.get("smell")
             isSmell = request.GET.get("isSmell")
+            
             print('response : '+text+' , '+smell+' , '+isSmell)
 
             # to save any file on your current data path you shoud use this relative path:
@@ -119,7 +121,10 @@ class TextInputViewSet(ViewSet):
     """
     Load Text and Apply ML model API
     """
-    autoencoder = load_model( 'lstm_model.h5')
+    autoencoder_cm = load_model('lstm_model.h5')
+    autoencoder_lp = load_model('lstm_model_lp.h5')
+    autoencoder_abs = load_model('lstm_model_ma.h5')
+
     tokenizer = transformers.AutoTokenizer.from_pretrained("bert-base-cased")
     PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
     @swagger_auto_schema(query_serializer=TextInputSerializer)
@@ -156,7 +161,7 @@ class TextInputViewSet(ViewSet):
                     else :
                         y_pred = False
                     if(int(res.pc) >= 3 and int(res.pc) <= 5):
-                        y_pred = self.callAlgo(count,text,"LongMethod")
+                        y_pred = self.callAlgo(1074,text,"LongMethod")
                         smell = "LongMethod"
                         if(float(res.pc) >= 6):
                             y_pred = True
@@ -165,7 +170,7 @@ class TextInputViewSet(ViewSet):
                         y_pred = False
                 else:
                     if(float(res.lcom) >= 0.4 and float(res.lcom) <= 0.6):
-                        y_pred = self.callAlgo(count,text,"MultiFaceted")
+                        y_pred = self.callAlgo(6270,text,"MultiFaceted")
                         smell = "MultiFaceted"
                         if(float(res.lcom) >= 0.6):
                             y_pred = True
@@ -217,11 +222,11 @@ class TextInputViewSet(ViewSet):
         print(smell)
            # print(X_train)
         if(smell == "ComplexMethod"):
-            y = self.autoencoder.predict(X_train)
+            y = self.autoencoder_cm.predict(X_train)
         elif (smell == "LongMethod"):
-            y = self.autoencoder.predict(X_train)
+            y = self.autoencoder_lp.predict(X_train)
         else:
-            y = self.autoencoder.predict(X_train)
+            y = self.autoencoder_abs.predict(X_train)
 
         y = y.reshape(y.shape[0], y.shape[1])   
         mse = numpy.mean(numpy.power(X_train - y, 2), axis=1)                            
@@ -335,4 +340,14 @@ class LoadFileViewSet(ViewSet):
             return Response(
                 f"[ERR]: {e}",
                 status=status.HTTP_400_BAD_REQUEST,
+            )
+
+class LoadRetrainModel(ViewSet):
+    
+    @swagger_auto_schema()
+    def create(self, request):
+        x = threading.Thread(target=train_model)
+        x.start()
+        return HttpResponse(
+                status=status.HTTP_200_OK,
             )
