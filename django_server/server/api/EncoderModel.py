@@ -46,6 +46,7 @@ def train_model():
                         pass
             if(smell == 'ComplexMethod'):
                 autoencoder = load_model('lstm_model.h5')
+                
             elif(smell == 'LongMethod'):
                 autoencoder = load_model('lstm_model_lp.h5')
             else:
@@ -59,6 +60,18 @@ def train_model():
                                 verbose=1,
                                 validation_split=0.2,
                                 shuffle=True).history
+            
+            if(True):
+                if(smell == 'ComplexMethod'):
+                    autoencoder = load_model('lstm_model.h5')
+                    autoencoder.save('lstm_model.h5')
+                elif(smell == 'LongMethod'):
+                    autoencoder = load_model('lstm_model_lp.h5')
+                    autoencoder.save('lstm_model_lp.h5')
+                else:
+                    autoencoder = load_model('lstm_model_ma.h5')
+                    autoencoder.save('lstm_model_ma.h5')
+                    
     except:
          print('got an exception')
 
