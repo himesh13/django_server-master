@@ -1,0 +1,106 @@
+@GetMapping("/annotate")
+	public String annotate(Model model, String error, String logout, Authentication auth) throws IOException {
+		UserDetails loggedInUser = (UserDetails) auth.getPrincipal();
+		System.out.println("In annotation controller");
+		AnnotationReturnModel randomModel = annotationService
+				.getAnnotationForUser(loggedInUser.getUsername().toString(), "1", false, null);
+
+		Sample randomSample = randomModel.getSample();
+		// String content = Files.toString(new File("file.txt"), Charsets.UTF_8);
+		System.out.println("Sample returned :" + randomSample);
+		if (randomSample != null) {
+			if (randomSample.getIsClass()) {
+				System.out.println("Sample is class");
+				String packageName = randomSample.getPathToFile().substring(
+						TagmanUtil.ordinalIndexOf(randomSample.getPathToFile(), File.separator, 4) + 1,
+						TagmanUtil.ordinalIndexOf(randomSample.getPathToFile(), File.separator, 5));
+				String className = randomSample.getPathToFile().substring(
+						TagmanUtil.ordinalIndexOf(randomSample.getPathToFile(), File.separator, 5) + 1,
+						randomSample.getPathToFile().length() - 5);
+
+				List<DesigniteCSV> desginEntry = designiteService.getdesigniteEntries(packageName, className,
+						randomSample.getProjectName());
+				if (desginEntry.size() > 0) {
+					System.out.println("Query returned more than zero results");
+					System.out.println("Entry put into model: " + desginEntry.get(0).toString());
+					model.addAttribute("designEntry", desginEntry.get(0));
+				}
+
+			} else {
+				System.out.println("Sample is method");
+
+				String packageName = randomSample.getPathToFile().substring(
+						TagmanUtil.ordinalIndexOf(randomSample.getPathToFile(), File.separator, 4) + 1,
+						TagmanUtil.ordinalIndexOf(randomSample.getPathToFile(), File.separator, 5));
+				String className = randomSample.getPathToFile().substring(
+						TagmanUtil.ordinalIndexOf(randomSample.getPathToFile(), File.separator, 5) + 1,
+						TagmanUtil.ordinalIndexOf(randomSample.getPathToFile(), File.separator, 6));
+				String methodName = randomSample.getPathToFile().substring(
+						TagmanUtil.ordinalIndexOf(randomSample.getPathToFile(), File.separator, 6) + 1,
+						randomSample.getPathToFile().length() - 5);
+
+				List<DesigniteCSVMethod> desginEntry = designiteService.getdesigniteMethodEntries(packageName,
+						className, randomSample.getProjectName(), methodName);
+
+				if (desginEntry.size() > 0) {
+					System.out.println("Query returned more than zero results");
+					System.out.println("Entry put into model: " + desginEntry.get(0).toString());
+
+					// System.out.println("entry" + desginEntry.get(0).toString());
+					model.addAttribute("designEntryMethod", desginEntry.get(0));
+				}
+			}
+//			String packageName = randomSample.getPathToFile().substring(
+//					TagmanUtil.ordinalIndexOf(randomSample.getPathToFile(), File.separator, 4),
+//					TagmanUtil.ordinalIndexOf(randomSample.getPathToFile(), File.separator, 5));
+//			String className = randomSample.getPathToFile()
+//					.substring(TagmanUtil.ordinalIndexOf(randomSample.getPathToFile(), File.separator, 5));
+
+//			List<DesigniteCSV> desginEntry = designiteService.getdesigniteEntries(packageName, className,
+//					randomSample.getProjectName());
+//			if (desginEntry.size() > 0)
+//				System.out.println("entry" + desginEntry.get(0).toString());
+			List<String> files = TagmanUtil.readFile(randomSample.getPathToFile());
+			StringBuilder sb = new StringBuilder();
+			files.forEach(file -> {
+				sb.append(file).append("\n");
+			});
+			model.addAttribute("isClass", randomSample.getIsClass());
+
+			model.addAttribute("sample", sb.toString());
+			model.addAttribute("id", randomSample.getId());
+			model.addAttribute("inputObject", new NonAdminHomePageModel());
+			model.addAttribute("isEmpty", "0");
+			model.addAttribute("filename", randomSample.getPathToFile()
+					.substring(randomSample.getPathToFile().lastIndexOf(File.separator) + 1));
+			System.out.println(TagmanUtil.readFile(randomSample.getPathToFile()).toString());
+
+			List<String> smells = List.of(randomSample.getSmells().split(","));
+			List<String> smellsConv = new ArrayList<>();
+
+			smells.stream().forEach(smell -> {
+				if (smell.equals("1"))
+					smellsConv.add("Complex Method");
+				else if (smell.equals("2"))
+					smellsConv.add("Long Parameter List");
+				else if (smell.equals("3"))
+					smellsConv.add("MultiFaceted Abstraction");
+
+			});
+			smellsConv.forEach(System.out::println);
+
+			model.addAttribute("smellsSent", smellsConv);
+
+		} else {
+			model.addAttribute("sample", "");
+			model.addAttribute("id", "");
+			model.addAttribute("filename", "");
+			model.addAttribute("inputObject", new NonAdminHomePageModel());
+			model.addAttribute("isEmpty", "1");
+			model.addAttribute("isClass", false);
+
+		}
+		model.addAttribute("totalUserCount", randomModel.getSize());
+
+		return "indexNonAdmin";
+	}

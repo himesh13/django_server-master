@@ -61,7 +61,7 @@ def train_model():
                                 validation_split=0.2,
                                 shuffle=True).history
             
-            if(True):
+            if(False):
                 if(smell == 'ComplexMethod'):
                     autoencoder = load_model('lstm_model.h5')
                     autoencoder.save('lstm_model.h5')

@@ -1,33 +1,39 @@
-file_name,smell,isSmell
-b34fe349-253f-4900-b867-b571d909a2d7,ad,ad
-af263230-c37a-4933-afed-503d1ce750b4,adzzzzzzzzzzzzzzzzza,adzzzzzzzzzzzzzzzzzza
-471e6a84-c31d-4c7a-8c00-0d98a9e0b52d,complexMethod,true
-7776f1c9-585e-4c64-86fa-89d89da1df7e,complexMethod,true
-b5e82a12-8417-4fe8-a6ed-e9e5a48b0766,complexMethod,false
-d2374a3b-8fa3-4a6b-869a-23c12c0c0e6c,complexMethod,true
-8749d213-e9ea-44ed-b1cb-04985684000e,No Smell,true
-a80821b2-10a8-48ea-b06e-28b812920242,LongMethod,true
-b643cdc5-e1c5-412a-9298-17add227a81a,No Smell,false
-3c355e06-3fff-45cb-91bc-ef992f4152df,No Smell,true
-19e6c461-3f33-4c89-b055-d876475c0fe5,,true
-5b329075-194b-45b0-8e42-cdc6c1fbc259,LongMethod,true
-e549424b-2ced-4522-b11a-29b43869850b,,true
-6812841c-bbb9-456d-9f1a-d9423c082e2f,No Smell,true
-189f6093-05eb-48fe-9dc5-2389cfcbcd6e,No Smell,false
-a2f1a1f1-ab95-4624-9b12-da2be718208b,LongMethod,true
-f869fc5a-9a7a-413d-be38-3866a791eb94,,true
-f6515129-db1d-4f21-ba5e-dc9754fbdb6d,LongMethod,true
-4f5f2a97-5085-455f-a367-cee5cbbf42ac,,true
-20d60237-753b-4b49-86dd-69c7a13979a1,LongMethod,true
-413edeb6-195d-45ab-98e1-6837cf9b0ed3,,true
-d9a4f9b3-4233-4d61-8641-894e6b4d8ace,,true
-0505f317-09d7-45c6-8e3e-5a1d90fe8406,,true
-053f63d0-ac20-40db-bf70-61227f4dd219,,true
-3e65229f-523e-4218-8cee-f9e1a08fbdd1,,true
-61cf6a4c-a3a6-4a14-a2c2-0efcd0f9a88b,,true
-bc861071-79d7-4370-990b-d1bda228dbe5,,true
-0a4a29eb-2360-4501-845b-fa3ea7232c6f,,true
-165e286a-862d-41ec-9ae0-a78833defa18,No Smell,false
-371d62d8-f0db-46fe-9ea3-acad58901d5d,No Smell,true
-8ad58c93-6c42-436c-bc72-3d8afc066aae,No Smell,false
-2075bb79-6e79-4259-8c66-1efe50eba783,No Smell,false
+file_name,smell,isSmell,userResponded
+b34fe349-253f-4900-b867-b571d909a2d7,ad,ad,
+af263230-c37a-4933-afed-503d1ce750b4,adzzzzzzzzzzzzzzzzza,adzzzzzzzzzzzzzzzzzza,
+471e6a84-c31d-4c7a-8c00-0d98a9e0b52d,complexMethod,true,
+7776f1c9-585e-4c64-86fa-89d89da1df7e,complexMethod,true,
+b5e82a12-8417-4fe8-a6ed-e9e5a48b0766,complexMethod,false,
+d2374a3b-8fa3-4a6b-869a-23c12c0c0e6c,complexMethod,true,
+8749d213-e9ea-44ed-b1cb-04985684000e,No Smell,true,
+a80821b2-10a8-48ea-b06e-28b812920242,LongMethod,true,
+b643cdc5-e1c5-412a-9298-17add227a81a,No Smell,false,
+3c355e06-3fff-45cb-91bc-ef992f4152df,No Smell,true,
+19e6c461-3f33-4c89-b055-d876475c0fe5,,true,
+5b329075-194b-45b0-8e42-cdc6c1fbc259,LongMethod,true,
+e549424b-2ced-4522-b11a-29b43869850b,,true,
+6812841c-bbb9-456d-9f1a-d9423c082e2f,No Smell,true,
+189f6093-05eb-48fe-9dc5-2389cfcbcd6e,No Smell,false,
+a2f1a1f1-ab95-4624-9b12-da2be718208b,LongMethod,true,
+f869fc5a-9a7a-413d-be38-3866a791eb94,,true,
+f6515129-db1d-4f21-ba5e-dc9754fbdb6d,LongMethod,true,
+4f5f2a97-5085-455f-a367-cee5cbbf42ac,,true,
+20d60237-753b-4b49-86dd-69c7a13979a1,LongMethod,true,
+413edeb6-195d-45ab-98e1-6837cf9b0ed3,,true,
+d9a4f9b3-4233-4d61-8641-894e6b4d8ace,,true,
+0505f317-09d7-45c6-8e3e-5a1d90fe8406,,true,
+053f63d0-ac20-40db-bf70-61227f4dd219,,true,
+3e65229f-523e-4218-8cee-f9e1a08fbdd1,,true,
+61cf6a4c-a3a6-4a14-a2c2-0efcd0f9a88b,,true,
+bc861071-79d7-4370-990b-d1bda228dbe5,,true,
+0a4a29eb-2360-4501-845b-fa3ea7232c6f,,true,
+165e286a-862d-41ec-9ae0-a78833defa18,No Smell,false,
+371d62d8-f0db-46fe-9ea3-acad58901d5d,No Smell,true,
+8ad58c93-6c42-436c-bc72-3d8afc066aae,No Smell,false,
+2075bb79-6e79-4259-8c66-1efe50eba783,No Smell,false,
+34680343-ac8c-4a3b-98ff-6fad576f4f7e,LongMethod,false,
+a505a4b6-c33e-4e04-a492-43bc4b06c212,MultiFaceted,false,True
+92a37b88-bf10-4359-bb19-fabe25a34a8e,ComplexMethod,false,False
+66127545-7967-4d0f-a68a-ad68a9d2ec12,ComplexMethod,true,True
+21a58750-16c6-4f53-97eb-9fdd348b766b,LongMethod,true,True
+fa2a8afb-31f6-45df-9665-0711ed24b68a,LongMethod,false,true

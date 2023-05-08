@@ -37,6 +37,7 @@ class CollectFeedbackViewSet(ViewSet):
             text = request.GET.get("file")
             smell = request.GET.get("smell")
             isSmell = request.GET.get("isSmell")
+            userResponded = request.GET.get("userResponded")
             
             print('response : '+text+' , '+smell+' , '+isSmell)
 
@@ -71,7 +72,7 @@ class CollectFeedbackViewSet(ViewSet):
             # prepare csv file
             try:
                 df = pd.read_csv('./data/code/feedback.csv')
-                new_df = pd.DataFrame({"file_name": file_name, "smell":str(smell), "isSmell":str(isSmell) }, index=[0])
+                new_df = pd.DataFrame({"file_name": file_name, "smell":str(smell), "isSmell":str(isSmell), "userResponded":str(userResponded) }, index=[0])
                 merged_df = df.append(new_df)
                 merged_df.to_csv("./data/code/feedback.csv", index=None)
             except:
@@ -137,6 +138,8 @@ class TextInputViewSet(ViewSet):
             qaulifiedName = request.GET.get("qaulifiedName")
             className = request.GET.get("className")
             methodName = request.GET.get("typeName")
+            y_pred = ""
+            smell = []
             if(isClass == "False"):
                 result,val = metrics.doesExistMethod(split(qaulifiedName,'.',-1)[0],split(qaulifiedName,'.',-1)[1],className)
                 
@@ -151,39 +154,36 @@ class TextInputViewSet(ViewSet):
             else:
                 res = val[0]
                 if(isClass == "False"):
-                    print(res.cc)
-                    print(res.pc)
+
                     if((float(res.cc) >= 4 and float(res.cc) <= 6)):
                         y_pred = self.callAlgo(count,text,"ComplexMethod")
-                        smell = "ComplexMethod"
-                    if(float(res.cc) >= 8):
-                        y_pred = True
-                    else :
-                        y_pred = False
+                        if y_pred == 1:
+                            smell.append("ComplexMethod")
+                        elif (float(res.cc) >= 8):
+                            smell.append("ComplexMethod")
+
                     if(int(res.pc) >= 3 and int(res.pc) <= 5):
                         y_pred = self.callAlgo(1074,text,"LongMethod")
-                        smell = "LongMethod"
-                        if(float(res.pc) >= 6):
-                            y_pred = True
-                    else :
-                        smell = "No Smell"
-                        y_pred = False
+                        if y_pred == 1:
+                            smell.append("LongMethod")
+                        elif (float(res.pc) > 5):
+                            smell.append("LongMethod")
+
                 else:
                     if(float(res.lcom) >= 0.4 and float(res.lcom) <= 0.6):
                         y_pred = self.callAlgo(6270,text,"MultiFaceted")
-                        smell = "MultiFaceted"
-                        if(float(res.lcom) >= 0.6):
-                            y_pred = True
-                    else :
-                        smell = "No Smell"
-                        y_pred = False
+                        if y_pred == 1:
+                            smell.append("MultiFaceted")
+                        elif (float(res.lcom) > 0.6):
+                            smell.append("MultiFaceted")
+                        
 
             #y_pred = self.new_method(count, text, qaulifiedName, className, val)
             print('result')
             print(y_pred)
 
             return HttpResponse(
-                json.dumps({"is_file_uploaded":True, "isSmell": y_pred,"smell":smell}),
+                json.dumps({"is_file_uploaded":True,"smell":smell}),
                 status=status.HTTP_200_OK,
             )
 
@@ -231,7 +231,7 @@ class TextInputViewSet(ViewSet):
         y = y.reshape(y.shape[0], y.shape[1])   
         mse = numpy.mean(numpy.power(X_train - y, 2), axis=1)                            
             #print(mse)
-        y_pred = [1 if e > 400000 else 0 for e in mse]
+        y_pred = 1 if mse > 400000 else 0 
         return y_pred
 
 
